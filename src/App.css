@@ -1,0 +1,28 @@
+.iconButton {
+  transition: 0.3s !important;
+}
+.iconButton:hover {
+  background-color: #c5c5c5 !important;
+  box-shadow: 0px 7px 7px rgba(0, 0, 0, 0.4);
+}
+.todo-card {
+  transition: 0.3s !important;
+  position: relative;
+}
+.todo-card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0px 7px 7px rgba(0, 0, 0, 0.4);
+}
+.todo-card::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: 5px;
+  background-color: #004d40 !important;
+}
+
+input {
+  text-transform: capitalize;
+}
