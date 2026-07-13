@@ -64,11 +64,8 @@ export default function ToDoList() {
   }
 
   useEffect(() => {
-    const data = localStorage.getItem("todos");
-    if (data) {
-      const storageTodos = JSON.parse(data);
-      setTodos(storageTodos);
-    }
+    const storageTodos = JSON.parse(localStorage.getItem("todos")) ?? [];
+    setTodos(storageTodos);
   }, []);
 
   function handleButton() {
