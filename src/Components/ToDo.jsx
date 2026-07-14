@@ -2,9 +2,7 @@ import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import Typography from "@mui/material/Typography";
 import Grid from "@mui/material/Grid";
-import { useContext } from "react";
-import TodoContext from "../Contexts/TodoContext";
-import SnackbarContext from "../Contexts/SnackbarContext";
+import { useSnackbar } from "../Contexts/SnackbarContext";
 
 // Icons
 import CheckIcon from "@mui/icons-material/Check";
@@ -12,22 +10,16 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import IconButton from "@mui/material/IconButton";
 import EditIcon from "@mui/icons-material/Edit";
 
-export default function ToDo({ todo, openDeleteDialog, openUpdateDialog }) {
-  const { todos, setTodos } = useContext(TodoContext);
-  const { handleShowToast, setMessage } = useContext(SnackbarContext);
+export default function ToDo({
+  todo,
+  openDeleteDialog,
+  openUpdateDialog,
+  dispatch,
+}) {
+  const { handleShowToast, setMessage } = useSnackbar();
 
   function handleCheckClick() {
-    const updateCompleted = todos.map((t) => {
-      if (t.id === todo.id) {
-        t.isCompleted == false
-          ? (t.isCompleted = true)
-          : (t.isCompleted = false);
-      }
-
-      return t;
-    });
-    setTodos(updateCompleted);
-    localStorage.setItem("todos", JSON.stringify(updateCompleted));
+    dispatch({ type: "toggleCompleted", payload: todo });
 
     setMessage(
       todo.isCompleted

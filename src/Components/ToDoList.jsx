@@ -1,19 +1,19 @@
 import Container from "@mui/material/Container";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
+import { forwardRef } from "react";
 import Typography from "@mui/material/Typography";
 import Divider from "@mui/material/Divider";
 import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import Grid from "@mui/material/Grid";
+import { useState, useEffect, useMemo, useReducer } from "react";
 import Button from "@mui/material/Button";
-import { useState, useContext, useEffect, useMemo } from "react";
-import { v4 as uuidv4 } from "uuid";
+import { useSnackbar } from "../Contexts/SnackbarContext";
+import reducer from "../Reducers/todoReducer";
 
 // My Components
 import ToDo from "./ToDo";
-import TodoContext from "../Contexts/TodoContext";
-import SnackbarContext from "../Contexts/SnackbarContext";
 
 // Transition For Dialog
 const Transition = forwardRef(function Transition(props, ref) {
@@ -22,7 +22,6 @@ const Transition = forwardRef(function Transition(props, ref) {
 
 // Dialog Imports
 import Slide from "@mui/material/Slide";
-import { forwardRef } from "react";
 import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
@@ -31,7 +30,7 @@ import TextField from "@mui/material/TextField";
 import DialogTitle from "@mui/material/DialogTitle";
 
 export default function ToDoList() {
-  const { todos, setTodos } = useContext(TodoContext);
+  const [todos, dispatch] = useReducer(reducer, []);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showUpdateDialog, setShowUpdateDialog] = useState(false);
   const [alignment, setAlignment] = useState("all");
@@ -40,9 +39,11 @@ export default function ToDoList() {
   const [taskTitle, setTaskTitle] = useState("");
   const [detailsTitle, setDetailsTitle] = useState("");
 
-  const { handleShowToast, setMessage } = useContext(SnackbarContext);
+  const { handleShowToast, setMessage } = useSnackbar();
 
   // Filtering Completes And Incompleted Tasks
+  let todosToBeRendered = todos;
+
   const completedTodos = useMemo(() => {
     return todos.filter((t) => {
       return t.isCompleted;
@@ -55,8 +56,6 @@ export default function ToDoList() {
     });
   }, [todos]);
 
-  let todosToBeRendered = todos;
-
   if (alignment == "completed") {
     todosToBeRendered = completedTodos;
   } else if (alignment == "incomplete") {
@@ -64,20 +63,14 @@ export default function ToDoList() {
   }
 
   useEffect(() => {
-    const storageTodos = JSON.parse(localStorage.getItem("todos")) ?? [];
-    setTodos(storageTodos);
+    dispatch({ type: "get" });
   }, []);
 
   function handleButton() {
-    const newTodo = {
-      id: uuidv4(),
-      title: taskTitle,
-      details: detailsTitle,
-      isCompleted: false,
-    };
-    const duplicateTodos = [...todos, newTodo];
-    setTodos(duplicateTodos);
-    localStorage.setItem("todos", JSON.stringify(duplicateTodos));
+    dispatch({
+      type: "added",
+      payload: { newTitle: taskTitle, newDetails: detailsTitle },
+    });
     setTaskTitle("");
     setDetailsTitle("");
 
@@ -99,11 +92,7 @@ export default function ToDoList() {
   }
 
   function handleDeleteConfirm() {
-    const filteringTodos = todos.filter((t) => {
-      return t.id != dialogTodo.id;
-    });
-    setTodos(filteringTodos);
-    localStorage.setItem("todos", JSON.stringify(filteringTodos));
+    dispatch({ type: "delete", payload: { dialogTodo } });
     setShowDeleteDialog(false);
 
     setMessage(`The ${dialogTodo.title} task has been deleted`);
@@ -119,19 +108,10 @@ export default function ToDoList() {
   }
 
   function handleUpdateConfirm() {
-    const updateTodo = todos.map((t) => {
-      if (t.id == dialogTodo.id) {
-        return { ...t, title: dialogTodo.title, details: dialogTodo.details };
-      } else {
-        return t;
-      }
-    });
-    setTodos(updateTodo);
-    localStorage.setItem("todos", JSON.stringify(updateTodo));
-    setShowUpdateDialog(false);
-
+    dispatch({ type: "update", payload: { dialogTodo } });
     setMessage(`The task has been updated successfully`);
     handleShowToast();
+    setShowUpdateDialog(false);
   }
 
   const todoLists = todosToBeRendered.map((t) => {
@@ -141,6 +121,7 @@ export default function ToDoList() {
         todo={t}
         openDeleteDialog={openDeleteDialog}
         openUpdateDialog={openUpdateDialog}
+        dispatch={dispatch}
       />
     );
   });
